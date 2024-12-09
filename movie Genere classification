@@ -1,0 +1,30 @@
+
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import classification_report, accuracy_score
+
+train_data = pd.read_csv('/content/train_data.txt', delimiter=':::', header=None,
+                         names=['ID', 'TITLE', 'GENRE', 'DESCRIPTION'], engine='python')
+test_data = pd.read_csv('/content/test_data.txt', delimiter=':::', header=None,
+                        names=['ID', 'TITLE', 'DESCRIPTION'], engine='python', on_bad_lines='skip')
+
+X = train_data['DESCRIPTION']
+y = train_data['GENRE']
+
+X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+
+vectorizer = TfidfVectorizer(stop_words='english', max_features=5000)
+X_train_tfidf = vectorizer.fit_transform(X_train)
+X_val_tfidf = vectorizer.transform(X_val)
+
+model = MultinomialNB()
+model.fit(X_train_tfidf, y_train)
+
+y_val_pred = model.predict(X_val_tfidf)
+print("Validation Accuracy:", accuracy_score(y_val, y_val_pred))
+print("Classification Report:\n", classification_report(y_val, y_val_pred))
+
+
+
