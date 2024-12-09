@@ -1,0 +1,43 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report
+
+data = pd.read_csv('/content/Churn_Modelling.csv')
+
+print("Dataset Preview:")
+print(data.head())
+
+print("\nColumn Names in Dataset:")
+print(data.columns)
+
+numerical_columns = data.select_dtypes(include=['number']).columns
+categorical_columns = data.select_dtypes(include=['object']).columns
+
+data[numerical_columns] = data[numerical_columns].fillna(data[numerical_columns].mean())
+
+data[categorical_columns] = data[categorical_columns].fillna(data[categorical_columns].mode().iloc[0])
+
+encoder = LabelEncoder()
+for column in categorical_columns:
+    data[column] = encoder.fit_transform(data[column])
+
+X = data.drop(columns=['Exited'])
+y = data['Exited']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+model = RandomForestClassifier(random_state=42)
+print("\nTraining Random Forest...")
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+
+print(f"Accuracy of Random Forest: {accuracy_score(y_test, y_pred):.2f}")
+print("Classification Report for Random Forest:\n", classification_report(y_test, y_pred))
